@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import OnboardingScreen from './screens/Onboarding';
 import Profile from "./screens/Profile";
+import { Home } from "./screens/Home";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
@@ -26,11 +27,11 @@ function App() {
 <Stack.Navigator>
           {state.isOnboardingCompleted ? (
             <>
-              {/* <Stack.Screen
+              <Stack.Screen
                 name="Home"
                 component={Home}
                 options={{ headerShown: false }}
-              /> */}
+              />
               <Stack.Screen name="Profile" component={Profile} />
             </>
           ) : (

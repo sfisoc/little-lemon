@@ -1,6 +1,6 @@
 import React from 'react';
 import {Text, StyleSheet, ScrollView, Pressable} from 'react-native';
-import { validateEmail,validateName } from "../util/util";
+import { validateEmail,validateName } from "../util";
 
 const Profile = () => {
 
@@ -30,6 +30,13 @@ const Profile = () => {
       validateEmail(profile.email) &&
       validateNumber(profile.phoneNumber)
     );
+  };
+
+
+  const update =  async (profile) => {
+  
+    await AsyncStorage.setItem("profile",profile);
+    
   };
 
   const pickImage = async () => {
