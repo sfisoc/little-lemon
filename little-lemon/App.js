@@ -1,20 +1,49 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import OnboardingScreen from './screens/Onboarding';
+import Profile from "./screens/Profile";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+
+const Stack = createNativeStackNavigator();
+
+function App() {
+
+  if (state.isLoading) {
+     // We haven't finished reading from AsyncStorage yet
+     return <SplashScreen />;
+    }
+
+    // const isOnboardingCompleted = await AsyncStorage.getItem("isOnboardingCompleted");
+
+
+
+
+ return (
+   <NavigationContainer>
+
+<Stack.Navigator>
+          {state.isOnboardingCompleted ? (
+            <>
+              {/* <Stack.Screen
+                name="Home"
+                component={Home}
+                options={{ headerShown: false }}
+              /> */}
+              <Stack.Screen name="Profile" component={Profile} />
+            </>
+          ) : (
+            <Stack.Screen
+              name="Onboarding"
+              component={Onboarding}
+              options={{ headerShown: false }}
+            />
+          )}
+
+       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+     </Stack.Navigator>
+   </NavigationContainer>
+ );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
