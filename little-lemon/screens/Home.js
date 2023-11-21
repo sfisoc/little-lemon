@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import * as React from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import {
   Text,
   View,
@@ -16,10 +17,10 @@ import {
   filterByQueryAndCategories,
 } from "../database";
 import Filters from "../components/Filters";
-import { getSectionListData, useUpdateEffect } from "../utils/utils";
+import { getSectionListData, useUpdateEffect } from "../util";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import debounce from "lodash.debounce";
-
+import Constants from "expo-constants";
 
 const Home = ({ navigation }) => {
 
@@ -28,12 +29,16 @@ const Home = ({ navigation }) => {
 
   const sections = ["starters", "mains", "desserts"];
 
-  const [data, setData] = useState([]);
-  const [searchBarText, setSearchBarText] = useState("");
-  const [query, setQuery] = useState("");
-  const [filterSelections, setFilterSelections] = useState(
+  const [data, setData] = React.useState([]);
+  const [searchBarText, setSearchBarText] = React.useState("");
+  const [query, setQuery] = React.useState("");
+  const [filterSelections, setFilterSelections] = React.useState(
     sections.map(() => false)
   );
+
+  const lookup = useCallback(q => {
+    setQuery(q);
+  }, []);
 
   const debouncedLookup = useMemo(() => debounce(lookup, 500), [lookup]);
 
@@ -41,8 +46,14 @@ const Home = ({ navigation }) => {
     setSearchBarText(text);
     debouncedLookup(text);
   };
+
+  const handleFiltersChange = async index => {
+    const arrayCopy = [...filterSelections];
+    arrayCopy[index] = !filterSelections[index];
+    setFilterSelections(arrayCopy);
+  };
   
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = React.useState({
     firstName: "",
     lastName: "",
     email: "",
@@ -72,7 +83,6 @@ const Home = ({ navigation }) => {
     } finally {
     }
   };
-
   
   useEffect(() => {
     (async () => {
@@ -84,10 +94,16 @@ const Home = ({ navigation }) => {
           menuItems = await fetchData();
           saveMenuItems(menuItems);
         }
+
         const sectionListData = getSectionListData(menuItems);
         setData(sectionListData);
+
         const getProfile = await AsyncStorage.getItem("profile");
-        setProfile(JSON.parse(getProfile));
+
+        if(getProfile)
+        {
+          setProfile(JSON.parse(getProfile));
+        }
       } catch (e) {
         Alert.alert(e.message);
       }
@@ -110,33 +126,18 @@ const Home = ({ navigation }) => {
         const sectionListData = getSectionListData(menuItems);
         setData(sectionListData);
       } catch (e) {
+        console.log(" e catch "+JSON.stringify(e));
         Alert.alert(e.message);
       }
     })();
   }, [filterSelections, query]);
   
-  const Item = ({ name, price, description, image }) => (
-    <View style={styles.item}>
-      <View style={styles.itemBody}>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.description}>{description}</Text>
-        <Text style={styles.price}>${price}</Text>
-      </View>
-      <Image
-        style={styles.itemImage}
-        source={{
-          uri: `https://github.com/Meta-Mobile-Developer-PC/Working-With-Data-API/blob/main/images/${image}?raw=true`,
-        }}
-      />
-    </View>
-  );
-
   return (
-    <View style={styles.container} onLayout={onLayoutRootView}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Image
           style={styles.logo}
-          source={require("../img/littleLemonLogo.png")}
+          source={require("../img/logo.png")}
           accessible={true}
           accessibilityLabel={"Little Lemon Logo"}
         />
@@ -168,7 +169,7 @@ const Home = ({ navigation }) => {
           </View>
           <Image
             style={styles.heroImage}
-            source={require("../img/restauranfood.png")}
+            source={require("../img/heroImage.png")}
             accessible={true}
             accessibilityLabel={"Little Lemon Food"}
           />
@@ -195,15 +196,13 @@ const Home = ({ navigation }) => {
         sections={data}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <Item
-            name={item.name}
-            price={item.price}
-            description={item.description}
-            image={item.image}
-          />
+          <View style={styles.itemBody}>
+          <Text style={styles.name}>{item.title}</Text>
+          <Text style={styles.price}>${item.price}</Text>
+        </View>
         )}
-        renderSectionHeader={({ section: { name } }) => (
-          <Text style={styles.itemHeader}>{name}</Text>
+        renderSectionHeader={({ section: { title } }) => (
+          <Text style={styles.itemHeader}>{title}</Text>
         )}
       />
     </View>
@@ -252,24 +251,20 @@ const styles = StyleSheet.create({
       paddingVertical: 8,
       color: "#495e57",
       backgroundColor: "#fff",
-      fontFamily: "Karla-ExtraBold",
     },
     name: {
       fontSize: 20,
       color: "#000000",
       paddingBottom: 5,
-      fontFamily: "Karla-Bold",
     },
     description: {
       color: "#495e57",
       paddingRight: 5,
-      fontFamily: "Karla-Medium",
     },
     price: {
       fontSize: 20,
       color: "#EE9972",
       paddingTop: 5,
-      fontFamily: "Karla-Medium",
     },
     itemImage: {
       width: 100,
@@ -301,16 +296,13 @@ const styles = StyleSheet.create({
     heroHeader: {
       color: "#f4ce14",
       fontSize: 54,
-      fontFamily: "MarkaziText-Medium",
     },
     heroHeader2: {
       color: "#fff",
       fontSize: 30,
-      fontFamily: "MarkaziText-Medium",
     },
     heroText: {
       color: "#fff",
-      fontFamily: "Karla-Medium",
       fontSize: 14,
     },
     heroBody: {
@@ -328,7 +320,6 @@ const styles = StyleSheet.create({
     delivery: {
       fontSize: 18,
       padding: 15,
-      fontFamily: "Karla-ExtraBold",
     },
   });
 

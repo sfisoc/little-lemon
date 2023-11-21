@@ -1,10 +1,14 @@
-import React from 'react';
-import {Text, StyleSheet, ScrollView, Pressable} from 'react-native';
-import { validateEmail,validateName } from "../util";
+import * as React from "react";
+import {useEffect, useState} from 'react';
+import {Text, StyleSheet, ScrollView, Pressable, TextInput, Image, View, Alert} from 'react-native';
+import { validateEmail,validateName,validateNumber } from "../util";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import CheckBox from 'expo-checkbox';
+import * as ImagePicker from "expo-image-picker";
 
-const Profile = () => {
+const Profile = ({navigation}) => {
 
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = React.useState({
     firstName: "",
     lastName: "",
     email: "",
@@ -25,8 +29,8 @@ const Profile = () => {
 
   const getIsFormValid = () => {
     return (
-      !validateName(profile.firstName) &&
-      !validateName(profile.lastName) &&
+      validateName(profile.firstName) &&
+      validateName(profile.lastName) &&
       validateEmail(profile.email) &&
       validateNumber(profile.phoneNumber)
     );
@@ -35,8 +39,10 @@ const Profile = () => {
 
   const update =  async (profile) => {
   
-    await AsyncStorage.setItem("profile",profile);
-    
+    await AsyncStorage.setItem("profile",JSON.stringify(profile));
+
+    Alert.alert("Saved"," Changes Saved !");
+
   };
 
   const pickImage = async () => {
@@ -69,9 +75,8 @@ const Profile = () => {
   };
 
   const logout = async () => {
-      // Todo pop navigator
       await AsyncStorage.clear();
-
+      navigation.navigate('Onboarding');
   };
 
   
@@ -83,7 +88,10 @@ const Profile = () => {
       try {
         const getProfileJson = await AsyncStorage.getItem("profile");
 
-        setProfile(JSON.parse(getProfileJson));
+        if(getProfileJson)
+        {
+          setProfile(JSON.parse(getProfileJson));
+        }
 
         if(!profile.firstName)
         {
@@ -92,10 +100,10 @@ const Profile = () => {
 
         }
 
-        if(profile.email)
+        if(!profile.email)
         {
           const email = await AsyncStorage.getItem("email");
-          updateProfile("email",name);
+          updateProfile("email",email);
         }
 
         setDiscard(false);
@@ -202,7 +210,7 @@ const Profile = () => {
         />
         <Text style={styles.headerText}>Email notifications</Text>
         <View style={styles.section}>
-          <Checkbox
+          <CheckBox
             style={styles.checkbox}
             value={profile.orderStatuses}
             onValueChange={newValue => updateProfile("orderStatuses", newValue)}
@@ -211,7 +219,7 @@ const Profile = () => {
           <Text style={styles.paragraph}>Order statuses</Text>
         </View>
         <View style={styles.section}>
-          <Checkbox
+          <CheckBox
             style={styles.checkbox}
             value={profile.passwordChanges}
             onValueChange={newValue =>
@@ -222,7 +230,7 @@ const Profile = () => {
           <Text style={styles.paragraph}>Password changes</Text>
         </View>
         <View style={styles.section}>
-          <Checkbox
+          <CheckBox
             style={styles.checkbox}
             value={profile.specialOffers}
             onValueChange={newValue => updateProfile("specialOffers", newValue)}
@@ -231,7 +239,7 @@ const Profile = () => {
           <Text style={styles.paragraph}>Special offers</Text>
         </View>
         <View style={styles.section}>
-          <Checkbox
+          <CheckBox
             style={styles.checkbox}
             value={profile.newsletter}
             onValueChange={newValue => updateProfile("newsletter", newValue)}
@@ -282,12 +290,10 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 22,
     paddingBottom: 10,
-    // fontFamily: "Karla-ExtraBold",
   },
   text: {
     fontSize: 16,
     marginBottom: 5,
-    // fontFamily: "Karla-Medium",
   },
   inputBox: {
     alignSelf: "stretch",
@@ -330,7 +336,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#FFFFFF",
     alignSelf: "center",
-    // fontFamily: "Karla-Bold",
   },
   discardBtn: {
     flex: 1,
@@ -346,12 +351,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#3e524b",
     alignSelf: "center",
-    // fontFamily: "Karla-Bold",
   },
   btntext: {
     fontSize: 22,
     color: "#3e524b",
-    fontFamily: "Karla-Bold",
     alignSelf: "center",
   },
   section: {
